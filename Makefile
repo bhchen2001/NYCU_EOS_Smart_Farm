@@ -1,0 +1,27 @@
+CC = gcc
+
+COMM_SRC = comm.c
+COMM_OBJ = $(COMM_SRC:.c=.o)
+
+CONTROLLER_SRC = controller.c
+CONTROLLER_OBJ = $(CONTROLLER_SRC:.c=.o)
+
+MAIN_SRC = main.c
+
+TARGET = main
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(COMM_OBJ) $(CONTROLLER_OBJ) $(MAIN_SRC)
+	$(CC) $(MAIN_SRC) $(COMM_OBJ) $(CONTROLLER_OBJ) -o $(TARGET)
+
+$(COMM_OBJ): $(COMM_SRC)
+	$(CC) -c $(COMM_SRC) -o $(COMM_OBJ)
+
+$(CONTROLLER_OBJ): $(CONTROLLER_SRC)
+	$(CC) -c $(CONTROLLER_SRC) -o $(CONTROLLER_OBJ)
+
+clean:
+	rm -f $(COMM_OBJ) $(CONTROLLER_OBJ) main
