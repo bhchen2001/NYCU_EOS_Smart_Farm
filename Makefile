@@ -1,27 +1,27 @@
 CC = gcc
+CFLAGS = -Wall
 
-COMM_SRC = comm.c
-COMM_OBJ = $(COMM_SRC:.c=.o)
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
 
-CONTROLLER_SRC = controller.c
-CONTROLLER_OBJ = $(CONTROLLER_SRC:.c=.o)
-
-MAIN_SRC = main.c
-
-TARGET = main
+MAIN_SRC = controller_system.c
+OBJS = $(OBJ_DIR)/controller.o $(OBJ_DIR)/comm.o
+TARGET = $(BIN_DIR)/controller_system
 
 .PHONY: all clean
 
-all: $(TARGET)
+all: $(TARGET) $(CLIENT_TARGET)
 
-$(TARGET): $(COMM_OBJ) $(CONTROLLER_OBJ) $(MAIN_SRC)
-	$(CC) $(MAIN_SRC) $(COMM_OBJ) $(CONTROLLER_OBJ) -o $(TARGET)
+$(TARGET): $(MAIN_SRC) $(OBJS)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) $(MAIN_SRC) $(OBJS) -o $@
+	@echo "Built executable: $@"
 
-$(COMM_OBJ): $(COMM_SRC)
-	$(CC) -c $(COMM_SRC) -o $(COMM_OBJ)
-
-$(CONTROLLER_OBJ): $(CONTROLLER_SRC)
-	$(CC) -c $(CONTROLLER_SRC) -o $(CONTROLLER_OBJ)
+$(OBJS):
+	$(MAKE) -C $(SRC_DIR)
 
 clean:
-	rm -f $(COMM_OBJ) $(CONTROLLER_OBJ) main
+	rm -f $(TARGET)
+	$(MAKE) -C $(SRC_DIR) clean
+	@echo "Cleaned build artifacts in root and /obj/"
