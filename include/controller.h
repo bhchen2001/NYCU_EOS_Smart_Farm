@@ -13,7 +13,6 @@
 #define LOW_PRIORITY 10
 #define HIGH_PRIORITY -10
 
-void busy_wait(int seconds); // just for simulation
 void high_priority_task();
 void low_priority_task();
 

@@ -1,22 +1,15 @@
-#include "controller.h"
-
-void busy_wait(int seconds) {
-    struct timespec start, current;
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
-    while (1) {
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &current);
-        double elapsed = (current.tv_sec - start.tv_sec);
-        if (elapsed >= seconds) break;
-    }
-}
+#include "include/controller.h"
 
 void high_priority_task() {
     // set higher priority
-    // setpriority(PRIO_PROCESS, 0, HIGH_PRIORITY);
+    setpriority(PRIO_PROCESS, 0, HIGH_PRIORITY);
     client_request request;
 
     while (1) {
-        read(high_priority_pipe[0], &request, sizeof(client_request));
+        if (msgrcv(high_priority_msgq, &request, sizeof(client_request) - sizeof(long), 0, 0) < 0) {
+            perror("Message receive failed");
+            exit(EXIT_FAILURE);
+        }
         printf("[High-Priority] Handling CONTROL request: Client=%d, Signal=%d\n", request.client_id, request.control_signal);
 
         /*
@@ -28,18 +21,23 @@ void high_priority_task() {
         // ********************************************************************
 
         // send response to client
-        write(request.client_id, response, BUFFER_SIZE);
-        // close(request.client_id);
+        if (write(request.client_id, response, BUFFER_SIZE) < 0) {
+            perror("Write failed");
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
 void low_priority_task() {
     // set lower priority
-    // setpriority(PRIO_PROCESS, 0, LOW_PRIORITY);
+    setpriority(PRIO_PROCESS, 0, LOW_PRIORITY);
     client_request request;
 
     while (1) {
-        read(low_priority_pipe[0], &request, sizeof(client_request));
+        if (msgrcv(low_priority_msgq, &request, sizeof(client_request) - sizeof(long), 0, 0) < 0) {
+            perror("Message receive failed");
+            exit(EXIT_FAILURE);
+        }
         printf("[Low-Priority] Handling QUERY request: Client=%d\n", request.client_id);
 
         /*
@@ -51,7 +49,9 @@ void low_priority_task() {
         // ****************************************************************
 
         // send response to client
-        write(request.client_id, response, BUFFER_SIZE);
-        // close(request.client_id);
+        if (write(request.client_id, response, BUFFER_SIZE) < 0) {
+            perror("Write failed");
+            exit(EXIT_FAILURE);
+        }
     }
 }
