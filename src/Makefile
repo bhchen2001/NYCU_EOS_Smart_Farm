@@ -4,7 +4,7 @@ CFLAGS = -Wall -I../
 OBJ_DIR = ../obj
 BIN_DIR = ../bin
 
-SRCS = comm.c controller.c
+SRCS = comm.c controller.c shm.c
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 
 CLIENT_SRC = client.c
