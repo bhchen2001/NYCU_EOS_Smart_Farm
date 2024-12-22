@@ -3,6 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <errno.h>
+#include <signal.h>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 4444
@@ -12,6 +15,7 @@ int sockfd;
 
 void setup_connection();
 void sendRequest(const char *requestType, int controlSignal);
+void get_alarm();
 
 void setup_connection() {
     struct sockaddr_in server_addr;
@@ -53,6 +57,19 @@ void sendRequest(const char *requestType, int controlSignal) {
     memset(buffer, 0, BUFFER_SIZE);
     read(sockfd, buffer, BUFFER_SIZE);
     printf("Response from server: %s\n", buffer);
+
+    return;
+}
+
+void get_alarm() {
+    char buffer[BUFFER_SIZE] = {0};
+
+    while (1) {
+        // receive the request
+        memset(buffer, 0, BUFFER_SIZE);
+        read(sockfd, buffer, BUFFER_SIZE);
+        printf("Alarm from server: %s\n", buffer);
+    }
 
     return;
 }

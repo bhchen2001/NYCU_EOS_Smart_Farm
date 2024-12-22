@@ -1,10 +1,23 @@
 #include "include/client.h"
 
+void signal_handler(int sig) {
+    // kill the child process
+    kill(0, SIGKILL);
+    close(sockfd);
+    exit(0);
+}
+
 int main() {
     int choice;
 
     // setup connection with the server
     setup_connection();
+
+    // child process to handle alarm requests
+    if (fork() == 0) {
+        get_alarm();
+        exit(0);
+    }
 
     while (1) {
         printf("\nClient Test Program\n");
@@ -30,6 +43,8 @@ int main() {
                 break;
             case 4:
                 printf("Exiting client.\n");
+                kill(0, SIGKILL);
+                close(sockfd);
                 exit(0);
             default:
                 printf("Invalid choice. Please try again.\n");
