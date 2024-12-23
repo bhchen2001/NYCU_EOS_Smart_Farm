@@ -84,12 +84,12 @@ int main() {
     pthread_attr_setinheritsched(&low_attr, PTHREAD_EXPLICIT_SCHED);
 
     pthread_attr_setschedpolicy(&high_attr, SCHED_FIFO);
-    // pthread_attr_setschedpolicy(&low_attr, SCHED_FIFO);
-    pthread_attr_setschedpolicy(&low_attr, SCHED_OTHER);
+    pthread_attr_setschedpolicy(&low_attr, SCHED_FIFO);
+    // pthread_attr_setschedpolicy(&low_attr, SCHED_OTHER);
 
     struct sched_param high_priority_param, low_priority_param;
     high_priority_param.sched_priority = SCHED_FIFO_MED_PRIORITY;
-    // low_priority_param.sched_priority = SCHED_FIFO_LOW_PRIORITY;
+    low_priority_param.sched_priority = SCHED_FIFO_LOW_PRIORITY;
 
     pthread_attr_setschedparam(&high_attr, &high_priority_param);
     pthread_attr_setschedparam(&low_attr, &low_priority_param);
