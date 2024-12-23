@@ -14,6 +14,7 @@
 /*
  * shared memory for sensor data
  *     - pid: process id of the controller
+ *     - humidity: current humidity value
  */
 typedef struct {
     pid_t pid;
