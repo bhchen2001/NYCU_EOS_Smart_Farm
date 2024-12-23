@@ -15,19 +15,7 @@
 #include <sys/msg.h>
 
 #include "include/shm.h"
-
-#define HIGH_PRIORITY_MSGQ_KEY 5678
-
-/*
- * client request structure
- */
-typedef struct {
-    long msg_type;
-    int client_id;
-    char request_type[10];
-    int control_signal;
-    int priority;
-} client_request;
+#include "include/comm_utils.h"
 
 int shm_fd;
 shared_humidity *shm_ptr;
@@ -41,7 +29,7 @@ void sigint_handler(int sig) {
 /*
  * simulate sensor data update
  */
-void timer_handler(int sig) {
+void routine_task(int sig) {
     float humidity = (float)(rand() % 100);
     set_humidity((void *)shm_ptr, humidity);
     printf("[SENSOR] Current Humidity: %.2f%%\n", humidity);
@@ -52,13 +40,11 @@ void timer_handler(int sig) {
      *     signal the controller
      */
     if (humidity < 45.0) {
-        client_request request;
-        request.msg_type = 1;
-        request.client_id = 0;
-        strcpy(request.request_type, "ALARM");
-        request.control_signal = 0;
+        task_request request;
 
-        if (msgsnd(high_priority_msgq, &request, sizeof(client_request) - sizeof(long), 0) < 0) {
+        set_task_request(&request, 0, ALARM, 0, 1, 0, humidity);
+
+        if (msgsnd(high_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0) < 0) {
             perror("Message send failed");
             exit(EXIT_FAILURE);
         }
@@ -67,7 +53,7 @@ void timer_handler(int sig) {
 
         // get the controller pid from shared memory
         pid_t controller_pid = shm_ptr->pid;
-        kill(controller_pid, SIGUSR2);
+        kill(controller_pid, SIGUSR1);
     }
 }
 
@@ -87,7 +73,7 @@ int main() {
     }
 
     // set up timer for sensor data update
-    signal(SIGALRM, timer_handler);
+    signal(SIGALRM, routine_task);
 
     /*
      * set up timer
