@@ -4,15 +4,16 @@ CFLAGS = -Wall -I../
 OBJ_DIR = ../obj
 BIN_DIR = ../bin
 
-SRCS = comm.c controller.c shm.c
+SRCS = comm.c controller.c shm.c comm_utils.c
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 
 CLIENT_SRC = client.c
 CLIENT_TARGET = $(BIN_DIR)/client
 
-.PHONY: all clean
+.PHONY: all client clean
 
 all: $(OBJS) $(CLIENT_TARGET)
+client: $(CLIENT_TARGET)
 
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(OBJ_DIR)
