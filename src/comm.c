@@ -58,12 +58,11 @@ void setup_server() {
 
 void handle_client_requests() {
     char buffer[BUFFER_SIZE] = {0};
-    client_request request;
+    task_request request;
 
     while (1) {
         memset(buffer, 0, BUFFER_SIZE);
-        memset(&request, 0, sizeof(client_request));
-        request.priority = -1;
+        memset(&request, 0, sizeof(task_request));
 
         if (read(client_fd, buffer, BUFFER_SIZE) <= 0) {
             perror("Client Disconnect");
@@ -73,23 +72,31 @@ void handle_client_requests() {
         // parse client request
         char request_type[10];
         int signal;
-        sscanf(buffer, "%s %d", request_type, &signal);
-        printf("New request from client %d: %s %d\n", client_fd, request_type, signal);
+        int period;
+        sscanf(buffer, "%s %d %d", request_type, &signal, &period);
 
-        request.client_id = client_fd;
-        strcpy(request.request_type, request_type);
-        request.control_signal = signal;
-        request.priority = (strcmp(request_type, "CONTROL") == 0) ? 1 : 0;
+        // error handling
+        if (strcmp(request_type, CONTROL) == 0 && (signal < 0 || signal > PUMP_OPTION_MAX)) {
+            printf("Invalid control signal\n");
+            continue;
+        }
+        else if (signal == PUMP_PERIOD && (period < 0 || period > 10)) {
+            printf("Invalid pump period\n");
+            continue;
+        }
+        printf("[CONTROLLER] New request from client %d: %s %d %d\n", client_fd, request_type, signal, period);
+
+        set_task_request(&request, client_fd, request_type, signal, (strcmp(request_type, CONTROL) == 0) ? HIGH_PRIORITY : LOW_PRIORITY, period, -1);
 
         if (request.priority == 1) {
             request.msg_type = 1;
-            if (msgsnd(high_priority_msgq, &request, sizeof(client_request) - sizeof(long), 0) < 0) {
+            if (msgsnd(high_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0) < 0) {
                 perror("Message send failed");
                 exit(EXIT_FAILURE);
             }
         } else {
             request.msg_type = 1;
-            if (msgsnd(low_priority_msgq, &request, sizeof(client_request) - sizeof(long), 0) < 0) {
+            if (msgsnd(low_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0) < 0) {
                 perror("Message send failed");
                 exit(EXIT_FAILURE);
             }
