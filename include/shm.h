@@ -22,6 +22,6 @@ typedef struct {
 } shared_humidity;
 
 void initialize_shm(int *shm_fd, void **shm_ptr);
-void get_humidity(void *shm_ptr, float *humidity);
+void get_humidity_shm(void *shm_ptr, float *humidity);
 void set_humidity(void *shm_ptr, float humidity);
 void remove_shm(void *shm_ptr);

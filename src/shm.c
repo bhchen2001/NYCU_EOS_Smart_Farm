@@ -17,7 +17,7 @@ void initialize_shm(int *shm_fd, void **shm_ptr) {
     return;
 }
 
-void get_humidity(void *shm_ptr, float *humidity) {
+void get_humidity_shm(void *shm_ptr, float *humidity) {
     *humidity = ((shared_humidity *)shm_ptr)->humidity;
     return;
 }
