@@ -3,6 +3,7 @@
 int shm_id;
 shared_humidity *shm_ptr;
 pthread_mutex_t water_pump_mutex;
+int l298n_fd;
 
 void busy_wait(int seconds) {
     struct timespec start, current;
@@ -21,7 +22,10 @@ void *high_priority_task() {
 
     while (1) {
         if (msgrcv(high_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0, 0) < 0) {
-            perror("Message receive failed");
+            if (errno == EINTR) {
+                continue;
+            }
+            perror("[HIGH_PRIORITY] Message receive failed");
             exit(EXIT_FAILURE);
         }
         printf("[HIGH_PRIORITY] Handling CONTROL request: Client=%d, Signal=%d ,Period=%d\n", request.client_id, request.control_signal, request.pump_period);
@@ -40,24 +44,27 @@ void *high_priority_task() {
         else if (strcmp(request.request_type, CONTROL) == 0) {
             printf("[HIGH_PRIORITY] Controlling water pump:");
             sprintf(response, "Water pump is now");
+            // lock the water pump mutex
+            pthread_mutex_lock(&water_pump_mutex);
             switch (request.control_signal) {
                 case PUMP_OFF:
                     printf(" OFF\n");
                     strcat(response, " OFF\n");
+                    set_pump(l298n_fd, DEV_PUMP_OFF);
                     break;
                 case PUMP_ON:
                     printf(" ON\n");
                     strcat(response, " ON\n");
+                    set_pump(l298n_fd, DEV_PUMP_ON);
                     break;
                 case PUMP_PERIOD:
                     printf(" PERIOD: %d\n", request.pump_period);
                     sprintf(response, " ON with period: %d\n", request.pump_period);
+                    set_pump(l298n_fd, DEV_PUMP_ON);
+                    busy_wait(request.pump_period);
+                    set_pump(l298n_fd, DEV_PUMP_OFF);
                     break;
             }
-            // lock the water pump mutex
-            pthread_mutex_lock(&water_pump_mutex);
-            // busy wait for simulating water pump control
-            busy_wait(5);
             // unlock the water pump mutex
             pthread_mutex_unlock(&water_pump_mutex);
 
@@ -81,6 +88,9 @@ void *low_priority_task() {
 
     while (1) {
         if (msgrcv(low_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0, 0) < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
             perror("[LOW_PRIORITY] Message receive failed");
             exit(EXIT_FAILURE);
         }
@@ -89,7 +99,7 @@ void *low_priority_task() {
 
             // get humidity from shared memory
             float humidity;
-            get_humidity((void *)shm_ptr, &humidity);
+            get_humidity_shm((void *)shm_ptr, &humidity);
             printf("[LOW_PRIORITY] Current Humidity: %.2f%%\n", humidity);
 
             // simulate query overhead
@@ -114,7 +124,9 @@ void sigusr1_handler() {
 
     // lock the water pump mutex
     pthread_mutex_lock(&water_pump_mutex);
+    set_pump(l298n_fd, DEV_PUMP_ON);
     busy_wait(5);
+    set_pump(l298n_fd, DEV_PUMP_OFF);
     // unlock the water pump mutex
     pthread_mutex_unlock(&water_pump_mutex);
 
