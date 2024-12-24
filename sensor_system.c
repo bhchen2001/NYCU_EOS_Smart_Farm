@@ -16,10 +16,13 @@
 
 #include "include/shm.h"
 #include "include/comm_utils.h"
+#include "include/device_utils.h"
 
 int shm_fd;
 shared_humidity *shm_ptr;
 int high_priority_msgq;
+
+int ads1115_fd;
 
 void sigint_handler(int sig) {
     remove_shm((void *)shm_ptr);
@@ -30,7 +33,9 @@ void sigint_handler(int sig) {
  * simulate sensor data update
  */
 void routine_task(int sig) {
-    float humidity = (float)(rand() % 100);
+    // get humidity from sensor
+    float humidity;
+    get_humidity_dev(ads1115_fd, &humidity);
     set_humidity((void *)shm_ptr, humidity);
     printf("[SENSOR] Current Humidity: %.2f%%\n", humidity);
 
@@ -71,6 +76,9 @@ int main() {
         perror("Message queue creation failed");
         exit(EXIT_FAILURE);
     }
+
+    // open ads1115 device
+    open_ads1115_device(&ads1115_fd);
 
     // set up timer for sensor data update
     signal(SIGALRM, routine_task);
