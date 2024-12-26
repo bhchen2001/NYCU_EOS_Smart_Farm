@@ -57,6 +57,9 @@ int main() {
     initialize_shm(&shm_id, (void **)&shm_ptr);
     printf("[CONTROLLER] Shared memory initialized\n");
 
+    // initialize shutdown request
+    shutdown_request = 0;
+
     // set the pid in shared memory
     shm_ptr->pid = getpid();
 
