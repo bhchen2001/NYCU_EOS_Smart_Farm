@@ -7,13 +7,13 @@ BIN_DIR = bin
 
 CONTROLLER_SRC = controller_system.c
 SENSOR_SRC = sensor_system.c
-SRCS = comm.c controller.c shm.c comm_utils.c
+SRCS = comm.c controller.c shm.c comm_utils.c device_utils.c
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 CLIENT_TARGET = $(BIN_DIR)/client
 CONTROLLER_TARGET = $(BIN_DIR)/controller_system
 SENSOR_TARGET = $(BIN_DIR)/sensor_system
 
-.PHONY: all client clean
+.PHONY: all client driver clean
 
 all: $(CONTROLLER_TARGET) $(SENSOR_TARGET)
 client: $(CLIENT_TARGET)
@@ -23,9 +23,9 @@ $(CONTROLLER_TARGET): $(CONTROLLER_SRC) $(OBJS)
 	$(CC) $(CFLAGS) $(CONTROLLER_SRC) $(OBJS) -o $@
 	@echo "Built executable: $@"
 
-$(SENSOR_TARGET): $(SENSOR_SRC) $(OBJ_DIR)/shm.o $(OBJ_DIR)/comm_utils.o
+$(SENSOR_TARGET): $(SENSOR_SRC) $(OBJ_DIR)/shm.o $(OBJ_DIR)/comm_utils.o $(OBJ_DIR)/device_utils.o
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $(SENSOR_SRC) $(OBJ_DIR)/shm.o $(OBJ_DIR)/comm_utils.o -o $@
+	$(CC) $(CFLAGS) $(SENSOR_SRC) $(OBJ_DIR)/shm.o $(OBJ_DIR)/comm_utils.o $(OBJ_DIR)/device_utils.o -o $@
 	@echo "Built executable: $@"
 
 $(CLIENT_TARGET): $(SRC_DIR)/client.c
@@ -37,5 +37,6 @@ $(OBJS):
 
 clean:
 	rm -f $(CONTROLLER_TARGET)
+	rm -f $(SENSOR_TARGET)
 	$(MAKE) -C $(SRC_DIR) clean
 	@echo "Cleaned build artifacts in root and /obj/"

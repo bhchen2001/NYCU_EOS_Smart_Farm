@@ -2,6 +2,7 @@
 #include "include/comm.h"
 #include "include/controller.h"
 #include "include/shm.h"
+#include "include/device_utils.h"
 #include <sys/wait.h>
 #include <signal.h>
 #include <sched.h>
@@ -56,8 +57,14 @@ int main() {
     initialize_shm(&shm_id, (void **)&shm_ptr);
     printf("[CONTROLLER] Shared memory initialized\n");
 
+    // initialize shutdown request
+    shutdown_request = 0;
+
     // set the pid in shared memory
     shm_ptr->pid = getpid();
+
+    // open the pump device
+    open_l298n_device(&l298n_fd);
 
     // set up signal handler for SIGUSR1
     signal(SIGUSR1, sigusr1_handler);

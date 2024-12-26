@@ -51,7 +51,8 @@ typedef struct {
 enum {
     PUMP_OFF = 0,
     PUMP_ON,
-    PUMP_PERIOD,
+    PUMP_ON_PERIOD,
+    PUMP_OFF_PERIOD,
     PUMP_OPTION_MAX
 };
 
