@@ -22,8 +22,22 @@ void get_humidity_shm(void *shm_ptr, float *humidity) {
     return;
 }
 
-void set_humidity(void *shm_ptr, float humidity) {
+void set_humidity_shm(void *shm_ptr, float humidity) {
+    pthread_mutex_lock(&((shared_humidity *)shm_ptr)->shm_mutex);
     ((shared_humidity *)shm_ptr)->humidity = humidity;
+    pthread_mutex_unlock(&((shared_humidity *)shm_ptr)->shm_mutex);
+    return;
+}
+
+void set_pump_status(void *shm_ptr, int pump_status) {
+    pthread_mutex_lock(&((shared_humidity *)shm_ptr)->shm_mutex);
+    ((shared_humidity *)shm_ptr)->pump_status = pump_status;
+    pthread_mutex_unlock(&((shared_humidity *)shm_ptr)->shm_mutex);
+    return;
+}
+
+void get_pump_status(void *shm_ptr, int *pump_status) {
+    *pump_status = ((shared_humidity *)shm_ptr)->pump_status;
     return;
 }
 
