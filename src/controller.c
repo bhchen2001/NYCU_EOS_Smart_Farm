@@ -23,6 +23,13 @@ void busy_wait(int seconds) {
 
 void *high_priority_task() {
     printf("[HIGH_PRIORITY] Started\n");
+
+    // set priority to med
+    int current_nice = nice(SCHED_OTHER_HIGH_NICE_VALUE);
+    if (current_nice == -1) {
+        perror("[HIGH_PRIORITY] nice");
+        exit(EXIT_FAILURE);
+    }
     task_request request;
     memset(&request, 0, sizeof(task_request));
 
@@ -61,12 +68,20 @@ void *high_priority_task() {
                     set_pump(l298n_fd, DEV_PUMP_ON);
                     busy_wait(request.pump_period);
                     set_pump(l298n_fd, DEV_PUMP_OFF);
+                    // clear the msg queue if the request is from user client
+                    if (request.client_id == client_fd) {
+                        while (msgrcv(high_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0, IPC_NOWAIT) >= 0);
+                    }
                     break;
                 case PUMP_OFF_PERIOD:
                     printf(" OFF with period: %d\n", request.pump_period);
                     sprintf(response, " OFF with period: %d\n", request.pump_period);
                     set_pump(l298n_fd, DEV_PUMP_OFF);
                     busy_wait(request.pump_period);
+                    // clear the msg queue if the request is from user client
+                    if (request.client_id == client_fd) {
+                        while (msgrcv(high_priority_msgq, &request, sizeof(task_request) - sizeof(long), 0, IPC_NOWAIT) >= 0);
+                    }
                     break;
             }
             // unlock the water pump mutex
@@ -87,6 +102,14 @@ void *high_priority_task() {
 
 void *low_priority_task() {
     printf("[LOW_PRIORITY] Started\n");
+
+    // set priority to low
+    int current_nice = nice(SCHED_OTHER_LOW_NICE_VALUE);
+    if (current_nice == -1) {
+        perror("[LOW_PRIORITY] nice");
+        exit(EXIT_FAILURE);
+    }
+
     task_request request;
     memset(&request, 0, sizeof(task_request));
 

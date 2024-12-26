@@ -35,10 +35,10 @@ void sigint_handler() {
 }
 
 int main() {
-    struct sched_param parent_param;
-    parent_param.sched_priority = SCHED_FIFO_HIGH_PRIORITY;
-    if (sched_setscheduler(0, SCHED_FIFO, &parent_param) < 0) {
-        perror("[CONTROLLER] sched_setscheduler");
+    // set priority to high
+    int current_nice = nice(SCHED_OTHER_HIGH_NICE_VALUE);
+    if (current_nice == -1) {
+        perror("[CONTROLLER] nice");
         exit(EXIT_FAILURE);
     }
 
@@ -90,16 +90,15 @@ int main() {
     pthread_attr_setinheritsched(&high_attr, PTHREAD_EXPLICIT_SCHED);
     pthread_attr_setinheritsched(&low_attr, PTHREAD_EXPLICIT_SCHED);
 
-    pthread_attr_setschedpolicy(&high_attr, SCHED_FIFO);
-    pthread_attr_setschedpolicy(&low_attr, SCHED_FIFO);
-    // pthread_attr_setschedpolicy(&low_attr, SCHED_OTHER);
+    pthread_attr_setschedpolicy(&high_attr, SCHED_OTHER);
+    pthread_attr_setschedpolicy(&low_attr, SCHED_OTHER);
 
-    struct sched_param high_priority_param, low_priority_param;
-    high_priority_param.sched_priority = SCHED_FIFO_MED_PRIORITY;
-    low_priority_param.sched_priority = SCHED_FIFO_LOW_PRIORITY;
+    // struct sched_param high_priority_param, low_priority_param;
+    // high_priority_param.sched_priority = SCHED_OTHER_MED_NICE_VALUE;
+    // low_priority_param.sched_priority = SCHED_OTHER_LOW_NICE_VALUE;
 
-    pthread_attr_setschedparam(&high_attr, &high_priority_param);
-    pthread_attr_setschedparam(&low_attr, &low_priority_param);
+    // pthread_attr_setschedparam(&high_attr, &high_priority_param);
+    // pthread_attr_setschedparam(&low_attr, &low_priority_param);
     
     pthread_create(&high_priority_thread, &high_attr, high_priority_task, NULL);
     pthread_create(&low_priority_thread, &low_attr, low_priority_task, NULL);
