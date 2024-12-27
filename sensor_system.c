@@ -19,6 +19,8 @@
 #include "include/comm_utils.h"
 #include "include/device_utils.h"
 
+#define HUMIDITY_THRESHOLD_LOW_PENDING 15
+
 int shm_fd;
 shared_humidity *shm_ptr;
 int low_priority_msgq, high_priority_msgq;
@@ -128,7 +130,7 @@ void routine_task(int sig) {
 
     counter++;
 
-    if (control_signal == 15) {
+    if (control_signal == HUMIDITY_THRESHOLD_LOW_PENDING) {
         control_signal = 0;
     } else if (control_signal > 0) {
         control_signal++;
