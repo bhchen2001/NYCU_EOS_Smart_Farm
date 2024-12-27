@@ -19,12 +19,17 @@
 #include "include/comm_utils.h"
 #include "include/device_utils.h"
 
+#define HUMIDITY_THRESHOLD_LOW_PENDING 15
+
 int shm_fd;
 shared_humidity *shm_ptr;
 int low_priority_msgq, high_priority_msgq;
 
 int ads1115_fd;
 int gpio_fd;
+
+// avoiding multiple control requests
+int control_signal = 0;
 
 void sigint_handler(int sig) {
     remove_shm((void *)shm_ptr);
@@ -52,7 +57,7 @@ void humidity_check_task() {
      *     send the request to message queue
      *     signal the controller
      */
-    if (humidity < HUMIDITY_THRESHOLD_LOW) {
+    if (humidity < HUMIDITY_THRESHOLD_LOW && control_signal == 0) {
         task_request request;
 
         // send the control request to controller
@@ -70,6 +75,8 @@ void humidity_check_task() {
             exit(EXIT_FAILURE);
         }
         printf("[SENSOR] Humidity %.2f%% below threshold -> Sent ALARM request\n", humidity);
+
+        control_signal = 1;
     }
     else if (humidity > HUMIDITY_THRESHOLD_HIGH) {
         task_request request;
@@ -122,6 +129,12 @@ void routine_task(int sig) {
     static int counter = 0;
 
     counter++;
+
+    if (control_signal == HUMIDITY_THRESHOLD_LOW_PENDING) {
+        control_signal = 0;
+    } else if (control_signal > 0) {
+        control_signal++;
+    }
 
     button_check_task();
     if (counter % 5 == 0) {

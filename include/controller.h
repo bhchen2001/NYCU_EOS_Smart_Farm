@@ -13,9 +13,9 @@
 #include "shm.h"
 #include "device_utils.h"
 
-#define SCHED_FIFO_LOW_PRIORITY 10
-#define SCHED_FIFO_MED_PRIORITY 20
-#define SCHED_FIFO_HIGH_PRIORITY 30
+#define SCHED_OTHER_LOW_NICE_VALUE 10
+#define SCHED_OTHER_MED_NICE_VALUE 5
+#define SCHED_OTHER_HIGH_NICE_VALUE 1
 
 extern int shm_id;
 extern shared_humidity *shm_ptr;

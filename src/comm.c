@@ -80,7 +80,7 @@ void handle_client_requests() {
             printf("Invalid control signal\n");
             continue;
         }
-        else if ((signal == PUMP_ON_PERIOD || signal == PUMP_OFF_PERIOD) && (period < 0 || period > 10)) {
+        else if ((signal == PUMP_ON_PERIOD || signal == PUMP_OFF_PERIOD) && (period < 0 || period > 1000)) {
             printf("Invalid pump period\n");
             continue;
         }

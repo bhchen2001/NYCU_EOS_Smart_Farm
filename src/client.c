@@ -9,6 +9,7 @@ void signal_handler(int sig) {
 
 int main() {
     int choice;
+    int period;
 
     // setup connection with the server
     setup_connection();
@@ -31,7 +32,6 @@ int main() {
         switch (choice) {
             case 1:
                 // turn on the water pump with period
-                int period;
                 printf("Input the period:");
                 scanf("%d", &period);
                 sendRequest(CONTROL, PUMP_ON_PERIOD, period);
@@ -41,6 +41,7 @@ int main() {
                 printf("Input the period:");
                 scanf("%d", &period);
                 sendRequest(CONTROL, PUMP_OFF_PERIOD, period);
+                break;
             case 3:
                 // query soil moisture
                 sendRequest(QUERY, -1, 0);
